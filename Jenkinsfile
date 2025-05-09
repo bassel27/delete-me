@@ -1,24 +1,37 @@
 pipeline {
-  agent any
+    agent none // Changed from 'any' to 'none' since we define agents per stage
 
-  stages {
-    stage('Build') {
-      steps {
-        script {
-          docker.image('node:18').inside("-v $WORKSPACE:/app -w /app") {
-            sh '''
-              npm install
-              npm run build -- --configuration=production --project=insight-hub-dashboard
-            '''
-          }
+    stages {
+        stage('Initialize') {
+            agent any
+            steps {
+                script {
+                    def dockerHome = tool 'myDocker'
+                    env.PATH = "${dockerHome}/bin:${env.PATH}"
+                }
+            }
         }
-      }
-    }
 
-    stage('Test') {
-      steps {
-        sh 'test -f insight-hub-dashboard/dist/insight-hub-dashboard/index.html'
-      }
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18'
+                }
+            }
+            steps {
+                sh '''
+                    cd insight-hub-dashboard
+                    npm install
+                    npm run build -- --configuration=production
+                '''
+            }
+        }
+
+        stage('Test') {
+            agent any
+            steps {
+                sh 'test -f insight-hub-dashboard/dist/insight-hub-dashboard/index.html'
+            }
+        }
     }
-  }
 }
