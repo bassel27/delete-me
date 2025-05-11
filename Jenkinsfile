@@ -1,17 +1,7 @@
 pipeline {
-    agent none // Changed from 'any' to 'none' since we define agents per stage
+    agent any
 
     stages {
-        stage('Initialize') {
-            agent any
-            steps {
-                script {
-                    def dockerHome = tool 'myDocker'
-                    env.PATH = "${dockerHome}/bin:${env.PATH}"
-                }
-            }
-        }
-
         stage('Build') {
             agent {
                 docker {
@@ -20,7 +10,6 @@ pipeline {
             }
             steps {
                 sh '''
-                    cd insight-hub-dashboard
                     npm install
                     npm run build -- --configuration=production
                 '''
